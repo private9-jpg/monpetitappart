@@ -18,6 +18,30 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## PostgreSQL database setup
+
+This project uses PostgreSQL 16 as the primary database. Local development is configured through `docker-compose.yml`, which starts PostgreSQL and Adminer.
+
+1. Copy `.env.example` to `.env.local`.
+2. Update the example values if needed.
+3. Start the database locally with:
+
+```bash
+docker compose up -d
+```
+
+The application expects these environment variables:
+
+- `DATABASE_URL`
+- `DIRECT_URL`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+
+Never commit `.env.local` or any real secrets. Only commit `.env.example`.
+
+If you use a separate preproduction or production database, set appropriate values in those environments and never point previews or tests at production data.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

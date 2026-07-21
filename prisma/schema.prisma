@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String             @id @default(uuid())
+  email        String             @unique
+  passwordHash String
+  role         UserRole           @default(AUTHOR)
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  articles     Article[]
+  sessions     Session[]
+  comments     Comment[]
+  reports      Report[]  @relation("ReportReporter")
+  auditLogs    AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Product {
+  id             String             @id @default(uuid())
+  name           String
+  slug           String             @unique
+  description    String?
+  priceCents     Int?
+  currency       String             @default("EUR")
+  merchant       String?
+  merchantId     String?
+  merchantRel    Merchant?          @relation("MerchantProducts", fields: [merchantId], references: [id], onDelete: SetNull)
+  affiliateUrl   String
+  productUrl     String?
+  imageUrl       String?
+  rating         Float?             @default(0)
+  isPublished    Boolean            @default(false)
+  publishedAt    DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  categories     ProductCategoryRelation[]
+  clusters       ProductCluster[]
+  affiliateLinks AffiliateLink[]
+  offers         ProductOffer[]
+  priceHistory   PriceHistory[]
+  conversions    Conversion[]
+  articles       Article[]
+
+  @@index([merchantId])
+  @@index([slug])
+}
+
+model Merchant {
+  id           String         @id @default(uuid())
+  name         String
+  slug         String         @unique
+  websiteUrl   String?
+  description  String?
+  products     Product[]      @relation("MerchantProducts")
+  offers       ProductOffer[]
+  priceHistory PriceHistory[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now())
+}
+
+model Cluster {
+  id          String           @id @default(uuid())
+  name        String
+  slug        String           @unique
+  description String?
+  products    ProductCluster[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now())
+}
+
+model ProductCategory {
+  id          String                     @id @default(uuid())
+  name        String
+  slug        String                     @unique
+  description String?
+  products    ProductCategoryRelation[]
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @default(now())
+}
+
+model ProductCategoryRelation {
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  category  ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+}
+
+model ProductCluster {
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  cluster   Cluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  clusterId String
+
+  @@id([productId, clusterId])
+  @@index([clusterId])
+}
+
+model ProductOffer {
+  id           String         @id @default(uuid())
+  product      Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId    String
+  merchant     Merchant       @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  merchantId   String
+  priceCents   Int
+  currency     String         @default("EUR")
+  url          String
+  isActive     Boolean        @default(true)
+  startsAt     DateTime?
+  endsAt       DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  priceHistory PriceHistory[]
+
+  @@index([productId, merchantId])
+}
+
+model PriceHistory {
+  id          String        @id @default(uuid())
+  product     Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId   String?
+  offer       ProductOffer? @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  offerId     String?
+  merchant    Merchant?     @relation(fields: [merchantId], references: [id], onDelete: SetNull)
+  merchantId  String?
+  priceCents  Int
+  currency    String        @default("EUR")
+  recordedAt  DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+
+  @@index([productId, offerId, merchantId])
+}
+
+model AffiliateLink {
+  id           String          @id @default(uuid())
+  product      Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId    String
+  source       String
+  url          String
+  isActive     Boolean         @default(true)
+  clickCount   Int             @default(0)
+  clicks       AffiliateClick[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([productId, source, isActive])
+}
+
+model AffiliateClick {
+  id              String          @id @default(uuid())
+  affiliateLink   AffiliateLink   @relation(fields: [affiliateLinkId], references: [id], onDelete: Cascade)
+  affiliateLinkId String
+  ip              String?
+  userAgent       String?
+  source          String?
+  metadata        Json?
+  conversion      Conversion?     @relation("AffiliateClickConversion")
+  createdAt       DateTime        @default(now())
+
+  @@index([affiliateLinkId])
+}
+
+model Conversion {
+  id               String           @id @default(uuid())
+  affiliateClick   AffiliateClick?  @relation("AffiliateClickConversion", fields: [affiliateClickId], references: [id], onDelete: SetNull)
+  affiliateClickId String?          @unique
+  product          Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId        String?
+  amountCents      Int
+  currency         String           @default("EUR")
+  status           ConversionStatus @default(PENDING)
+  metadata         Json?
+  createdAt        DateTime         @default(now())
+
+  @@index([productId])
+}
+
+model Article {
+  id           String        @id @default(uuid())
+  title        String
+  slug         String        @unique
+  excerpt      String?
+  content      String
+  status       ArticleStatus @default(DRAFT)
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  authorId     String
+  featuredAt   DateTime?
+  publishedAt  DateTime?
+  isFeatured   Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  products     Product[]
+
+  @@index([authorId])
+}
+
+model Comment {
+  id              String            @id @default(uuid())
+  author          User?             @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId        String?
+  targetType      CommentTargetType @default(PRODUCT)
+  targetId        String
+  content         String
+  parentComment   Comment?          @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentCommentId String?
+  replies         Comment[]         @relation("CommentReplies")
+  isPublished     Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([targetType, targetId])
+}
+
+model Report {
+  id          String           @id @default(uuid())
+  reporter    User?            @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  reporterId  String?
+  targetType  ReportTargetType
+  targetId    String
+  reason      String
+  metadata    Json?
+  status      ReportStatus     @default(OPEN)
+  createdAt   DateTime         @default(now())
+  resolvedAt  DateTime?
+
+  @@index([targetType, targetId])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId      String?
+  action      String
+  entity      String
+  entityId    String?
+  metadata    Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([entity, entityId])
+}
+
+model NewsletterSubscriber {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  isSubscribed   Boolean  @default(true)
+  subscribedAt   DateTime @default(now())
+  unsubscribedAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Redirect {
+  id             String   @id @default(uuid())
+  sourcePath     String   @unique
+  destinationUrl String
+  statusCode     Int      @default(301)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  AUTHOR
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CommentTargetType {
+  PRODUCT
+  ARTICLE
+  AFFILIATE_LINK
+}
+
+enum ReportTargetType {
+  PRODUCT
+  ARTICLE
+  AFFILIATE_LINK
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum ConversionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}

@@ -1,134 +1,133 @@
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Check, X } from "lucide-react";
+import { Calendar } from "lucide-react";
 
-const FAKE_COMPARISONS = [
+type Comparison = {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  productCount: number;
+  updatedAt: string;
+  href: string;
+};
+
+const COMPARISONS: Comparison[] = [
   {
     id: 1,
     title: "Assurance loyer impayé : quelle formule choisir ?",
-    items: [
-      {
-        name: "Essentiel",
-        price: "7,50 €/mois",
-        rating: 3,
-        features: {
-          "Couverture loyers": "80%",
-          "Protection juridique": "Non",
-          "Assistance 24/7": "Non",
-          "Dégradations": "Non",
-        },
-        recommended: false,
-      },
-      {
-        name: "Premium",
-        price: "12,90 €/mois",
-        rating: 4,
-        features: {
-          "Couverture loyers": "100%",
-          "Protection juridique": "Oui",
-          "Assistance 24/7": "Oui",
-          "Dégradations": "Non",
-        },
-        recommended: true,
-      },
-      {
-        name: "Pack Gestionnaire",
-        price: "24,90 €/mois",
-        rating: 5,
-        features: {
-          "Couverture loyers": "100%",
-          "Protection juridique": "Oui",
-          "Assistance 24/7": "Oui",
-          "Dégradations": "Oui",
-        },
-        recommended: false,
-      },
-    ],
+    description: "Comparez les meilleures offres pour protéger votre investissement locatif.",
+    image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80",
+    productCount: 3,
+    updatedAt: "2026-07-20",
+    href: "#",
+  },
+  {
+    id: 2,
+    title: "Garantie risque locatif : les meilleures solutions",
+    description: "Trouvez la garantie adaptée à votre profil et à votre budget.",
+    image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&q=80",
+    productCount: 4,
+    updatedAt: "2026-07-18",
+    href: "#",
+  },
+  {
+    id: 3,
+    title: "Gestion locative : outils et services",
+    description: "Comparatif des services de gestion pour propriétaires bailleurs.",
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
+    productCount: 5,
+    updatedAt: "2026-07-15",
+    href: "#",
+  },
+  {
+    id: 4,
+    title: "Assurance habitation : comparez les offres",
+    description: "Trouvez la meilleure protection pour votre logement.",
+    image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80",
+    productCount: 6,
+    updatedAt: "2026-07-12",
+    href: "#",
+  },
+  {
+    id: 5,
+    title: "Crédit immobilier : taux et conditions",
+    description: "Comparez les offres de prêt pour financer votre projet.",
+    image: "https://images.unsplash.com/photo-1586281370619-e54e2ce9e3af?w=800&q=80",
+    productCount: 4,
+    updatedAt: "2026-07-08",
+    href: "#",
+  },
+  {
+    id: 6,
+    title: "Déménagement : quel service choisir",
+    description: "Comparez les entreprises de déménagement sur prix et services.",
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80",
+    productCount: 5,
+    updatedAt: "2026-07-05",
+    href: "#",
   },
 ];
 
-type FeatureValue = string | boolean;
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 interface ComparisonCardProps {
-  comparison?: typeof FAKE_COMPARISONS[number];
+  comparison?: Comparison;
   className?: string;
 }
 
-export function ComparisonCard({ comparison = FAKE_COMPARISONS[0], className }: ComparisonCardProps) {
-  const features = Object.keys(comparison.items[0].features);
-
+export function ComparisonCard({ comparison = COMPARISONS[0], className }: ComparisonCardProps) {
   return (
-    <div className={`w-full overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm dark:border-surface-800 dark:bg-surface-900 ${className ?? ""}`}>
-      <div className="border-b border-surface-200 p-5 sm:p-6 dark:border-surface-800">
-        <h3 className="text-lg font-semibold tracking-tight text-surface-900 dark:text-surface-50">
+    <article className={`flex flex-col overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${className ?? ""}`}>
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-surface-100">
+        <Image
+          src={comparison.image}
+          alt={comparison.title}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+        <div className="absolute inset-x-0 top-0 flex p-4">
+          <Badge variant="default" className="bg-white/90 text-surface-900 hover:bg-white backdrop-blur-sm">
+            {comparison.productCount} produits
+          </Badge>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <h3 className="text-xl font-semibold leading-snug tracking-tight text-surface-900 line-clamp-2 dark:text-surface-50">
           {comparison.title}
         </h3>
-      </div>
 
-      <div className="overflow-x-auto">
-        <div className="min-w-[640px]">
-          <div className="grid grid-cols-4 gap-4 border-b border-surface-200 p-5 sm:p-6 dark:border-surface-800">
-            <div className="text-sm font-medium text-surface-500 dark:text-surface-400">Caractéristiques</div>
-            {comparison.items.map((item) => (
-              <div key={item.name} className="text-center">
-                <div className="text-base font-semibold text-surface-900 dark:text-surface-50">{item.name}</div>
-                <div className="mt-1 text-sm font-medium text-accent-600 dark:text-accent-400">{item.price}</div>
-                {item.recommended && (
-                  <Badge variant="default" className="mt-2 text-xs">Recommandé</Badge>
-                )}
-              </div>
-            ))}
-          </div>
+        <p className="mt-2 text-sm text-surface-600 line-clamp-2 dark:text-surface-400">
+          {comparison.description}
+        </p>
 
-          {features.map((feature) => (
-            <div
-              key={feature}
-              className="grid grid-cols-4 gap-4 border-b border-surface-100 p-5 sm:p-6 last:border-b-0 dark:border-surface-800"
-            >
-              <div className="text-sm text-surface-700 dark:text-surface-300">{feature}</div>
-              {comparison.items.map((item) => {
-                const value = item.features[feature as keyof typeof item.features] as FeatureValue;
-                return (
-                  <div key={item.name} className="flex justify-center">
-                    {typeof value === "boolean" ? (
-                      value ? (
-                        <Check className="size-5 text-emerald-600" />
-                      ) : (
-                        <X className="size-5 text-surface-300" />
-                      )
-                    ) : (
-                      <span className="text-sm font-medium text-surface-900 dark:text-surface-50">{value}</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+        <div className="mt-4 flex items-center gap-2 text-xs text-surface-500">
+          <Calendar className="size-3.5" />
+          <span>Mis à jour le {formatDate(comparison.updatedAt)}</span>
+        </div>
+
+        <div className="mt-auto pt-5">
+          <Button asChild className="w-full">
+            <a href={comparison.href}>Voir le comparatif</a>
+          </Button>
         </div>
       </div>
-
-      <div className="border-t border-surface-200 p-5 sm:p-6 dark:border-surface-800">
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-          {comparison.items.map((item) => (
-            <Button
-              key={item.name}
-              variant={item.recommended ? "default" : "outline"}
-              size="sm"
-              className="h-9"
-            >
-              Choisir {item.name}
-            </Button>
-          ))}
-        </div>
-      </div>
-    </div>
+    </article>
   );
 }
 
-export function ComparisonCardGrid({ comparisons = FAKE_COMPARISONS }: { comparisons?: typeof FAKE_COMPARISONS }) {
+export function ComparisonCardGrid({ comparisons = COMPARISONS }: { comparisons?: Comparison[] }) {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {comparisons.map((comparison) => (
         <ComparisonCard key={comparison.id} comparison={comparison} />
       ))}

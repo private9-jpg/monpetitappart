@@ -9,11 +9,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Type de tracking requis" }, { status: 400 });
   }
 
-  const event = await prisma.trackingEvent.create({
+  const event = await prisma.affiliateClick.create({
     data: {
-      type,
-      source,
-      metadata,
+      affiliateLinkId: metadata?.affiliateLinkId ?? "",
+      source: source ?? "api",
       ip: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? undefined,
       userAgent: request.headers.get("user-agent") ?? undefined,
     },

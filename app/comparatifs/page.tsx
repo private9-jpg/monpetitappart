@@ -1,8 +1,26 @@
+import { SiteLayout } from "@/components/layouts/SiteLayout";
+import { Hero } from "@/components/hero/Hero";
+import { ComparisonCardGrid } from "@/components/comparison/ComparisonCard";
+import { Newsletter } from "@/components/newsletter/Newsletter";
+import { Section } from "@/components/ui/section";
+
 export default function ComparatifsPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh]">
-      <h1 className="text-4xl font-bold tracking-tight">Comparatifs</h1>
-      <p className="mt-4 text-lg text-zinc-600">Page Comparatifs</p>
-    </div>
+    <SiteLayout>
+      <Hero
+        title="Comparatifs"
+        subtitle="Comparez les meilleures solutions pour votre logement."
+        primaryCta={{ label: "Voir les guides", href: "/guides" }}
+        secondaryCta={{ label: "Voir les produits", href: "/produits" }}
+      />
+
+      <Section>
+        <ComparisonCardGrid />
+      </Section>
+
+      <Section>
+        <Newsletter />
+      </Section>
+    </SiteLayout>
   );
 }

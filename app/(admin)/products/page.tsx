@@ -9,7 +9,14 @@ async function getProducts() {
   return prisma.product.findMany({
     orderBy: { updatedAt: "desc" },
     include: { affiliateLinks: true },
-  });
+  }) as Promise<Array<{
+    id: string;
+    name: string;
+    slug: string;
+    isPublished: boolean;
+    affiliateLinks: { id: string }[];
+    updatedAt: Date;
+  }>>;
 }
 
 export default async function AdminProductsPage() {

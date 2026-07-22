@@ -4,14 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { Container } from "@/components/ui/container";
 
 async function getCounts() {
-  const [users, products, articles, trackingEvents] = await Promise.all([
+  const [users, products, articles, affiliateClicks] = await Promise.all([
     prisma.user.count(),
     prisma.product.count(),
     prisma.article.count(),
-    prisma.trackingEvent.count(),
+    prisma.affiliateClick.count(),
   ]);
 
-  return { users, products, articles, trackingEvents };
+  return { users, products, articles, affiliateClicks };
 }
 
 export default async function AdminDashboardPage() {

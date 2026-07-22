@@ -1,1 +1,1 @@
-export { NewsletterCard } from "./NewsletterCard";
+export { Newsletter } from "@/components/newsletter/Newsletter";

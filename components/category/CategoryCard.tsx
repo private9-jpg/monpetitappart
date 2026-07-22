@@ -2,54 +2,17 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import type { Category } from "@/types/Category";
 
-const CATEGORIES = [
-  {
-    id: "amenagement",
-    name: "Aménagement",
-    description: "Optimisez chaque espace pour vivre mieux.",
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&q=80",
-  },
-  {
-    id: "decoration",
-    name: "Décoration",
-    description: "Astuces déco, minimalisme et ambiance.",
-    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&q=80",
-  },
-  {
-    id: "demenagement",
-    name: "Déménagement",
-    description: "Organisez votre départ sans stress.",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80",
-  },
-  {
-    id: "assurance",
-    name: "Assurance",
-    description: "Protégez votre logement et vos biens.",
-    image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=80",
-  },
-  {
-    id: "mobilier",
-    name: "Mobilier",
-    description: "Choisissez des pièces qui durent.",
-    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80",
-  },
-  {
-    id: "electromenager",
-    name: "Électroménager",
-    description: "Comparez et choisissez le meilleur rapport qualité-prix.",
-    image: "https://images.unsplash.com/photo-1571175446050-ef6e6d65e9dc?w=600&q=80",
-  },
-];
-
-interface CategoryCardProps {
-  category?: typeof CATEGORIES[number];
+export type CategoryCardProps = {
+  category?: Category;
   className?: string;
-}
+};
 
-export function CategoryCard({ category = CATEGORIES[0], className }: CategoryCardProps) {
+export function CategoryCard({ category, className }: CategoryCardProps) {
+  if (!category) return null;
   return (
-    <div className={`group relative flex flex-col overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${className ?? ""}`}>
+    <div className={`group flex flex-col overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${className ?? ""}`}>
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface-100">
         <Image
           src={category.image}
@@ -80,10 +43,11 @@ export function CategoryCard({ category = CATEGORIES[0], className }: CategoryCa
   );
 }
 
-export function CategoryCardGrid({ categories = CATEGORIES }: { categories?: typeof CATEGORIES }) {
+export function CategoryCardGrid({ categories }: { categories?: Category[] }) {
+  const items = categories ?? [];
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {categories.map((category) => (
+      {items.map((category) => (
         <CategoryCard key={category.id} category={category} />
       ))}
     </div>

@@ -1,54 +1,51 @@
+import type { ProductListItem } from "@/types/Product";
 import { ComparisonRow, ComparisonRowCard } from "./ComparisonRow";
 
-const PRODUCTS = [
+const PRODUCTS: ProductListItem[] = [
   {
-    id: 1,
-    product: "Assurance Loyer Impayé Premium",
-    image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=200&q=80",
+    id: "1",
+    name: "Assurance Loyer Impayé Premium",
+    description: "",
     price: "12,90",
     oldPrice: "16,90",
     unit: "€/mois",
+    image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=200&q=80",
     rating: 4,
     reviews: 128,
-    merchant: "AssurTech",
     badge: "Notre choix",
     href: "#",
   },
   {
-    id: 2,
-    product: "Garantie Risque Locatif Essentiel",
-    image: "https://images.unsplash.com/photo-1579621970563-e3c3b2b6b0a0?w=200&q=80",
+    id: "2",
+    name: "Garantie Risque Locatif Essentiel",
+    description: "",
     price: "7,50",
     oldPrice: "9,90",
     unit: "€/mois",
+    image: "https://images.unsplash.com/photo-1579621970563-e3c3b2b6b0a0?w=200&q=80",
     rating: 3,
     reviews: 84,
-    merchant: "ProtectHome",
     badge: null,
     href: "#",
   },
   {
-    id: 3,
-    product: "Pack Gestionnaire Immobilier",
-    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&q=80",
+    id: "3",
+    name: "Pack Gestionnaire Immobilier",
+    description: "",
     price: "24,90",
     oldPrice: "29,90",
     unit: "€/mois",
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&q=80",
     rating: 5,
     reviews: 256,
-    merchant: "ImmoAssure",
     badge: "Promo",
     href: "#",
   },
 ];
 
-interface ComparisonTableProps {
-  className?: string;
-}
-
-export function ComparisonTable({ className }: ComparisonTableProps) {
+export function ComparisonTable() {
   return (
-    <div className={className}>
+    <div>
       <div className="hidden md:block overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm dark:border-surface-800 dark:bg-surface-900">
         <table className="w-full">
           <thead>

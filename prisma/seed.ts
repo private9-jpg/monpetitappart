@@ -23,12 +23,12 @@ async function main() {
   await prisma.user.deleteMany();
 
   const userData = [
-    { email: "admin@monpetitappart.fr", passwordHash: "admin-hash", role: "ADMIN" },
-    { email: "editor@monpetitappart.fr", passwordHash: "editor-hash", role: "EDITOR" },
+    { email: "admin@monpetitappart.fr", passwordHash: "admin-hash", role: "ADMIN" as const },
+    { email: "editor@monpetitappart.fr", passwordHash: "editor-hash", role: "EDITOR" as const },
   ];
 
   await prisma.user.createMany({ data: userData, skipDuplicates: true });
-  const users = await prisma.user.findMany();
+  const users = await prisma.user.findMany() as Array<{ id: string; email: string }>;
 
   await prisma.merchant.createMany({
     data: [
@@ -130,7 +130,7 @@ async function main() {
   ];
 
   await prisma.product.createMany({ data: productsData, skipDuplicates: true });
-  const products = await prisma.product.findMany();
+  const products = await prisma.product.findMany() as Array<{ id: string; name: string; priceCents: number | null; currency: string; productUrl: string | null; affiliateUrl: string | null }>;
 
   await prisma.productCluster.createMany({
     data: products.map((product, index) => ({
@@ -206,7 +206,7 @@ async function main() {
   ]);
 
   await prisma.affiliateLink.createMany({ data: affiliateLinksData, skipDuplicates: true });
-  const affiliateLinks = await prisma.affiliateLink.findMany();
+  const affiliateLinks = await prisma.affiliateLink.findMany() as Array<{ id: string }>;
 
   const affiliateClicksData = affiliateLinks.slice(0, 10).flatMap((link, index) => [
     { affiliateLinkId: link.id, source: index % 2 === 0 ? "newsletter" : "instagram", ip: "127.0.0.1" },
@@ -214,7 +214,7 @@ async function main() {
   ]);
 
   await prisma.affiliateClick.createMany({ data: affiliateClicksData, skipDuplicates: true });
-  const affiliateClicks = await prisma.affiliateClick.findMany();
+  const affiliateClicks = await prisma.affiliateClick.findMany() as Array<{ id: string; affiliateLinkId: string }>;
 
   await prisma.conversion.createMany({
     data: affiliateClicks.slice(0, 4).map((click, index) => ({

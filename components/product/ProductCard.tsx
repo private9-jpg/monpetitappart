@@ -1,52 +1,13 @@
+"use client";
+
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
+import type { ProductListItem } from "@/types/Product";
 
-const PRODUCTS = [
-  {
-    id: 1,
-    name: "Assurance Loyer Impayé Premium",
-    description: "Protection complète pour votre investissement locatif.",
-    price: "12,90",
-    oldPrice: "16,90",
-    unit: "€/mois",
-    rating: 4,
-    reviews: 128,
-    image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&q=80",
-    badge: "Notre choix",
-    href: "#",
-  },
-  {
-    id: 2,
-    name: "Garantie Risque Locatif Essentiel",
-    description: "La sécurité à petit prix pour votre logement.",
-    price: "7,50",
-    oldPrice: "9,90",
-    unit: "€/mois",
-    rating: 3,
-    reviews: 84,
-    image: "https://images.unsplash.com/photo-1579621970563-e3c3b2b6b0a0?w=800&q=80",
-    badge: null,
-    href: "#",
-  },
-  {
-    id: 3,
-    name: "Pack Gestionnaire Immobilier",
-    description: "Tout en un pour les propriétaires bailleurs.",
-    price: "24,90",
-    oldPrice: "29,90",
-    unit: "€/mois",
-    rating: 5,
-    reviews: 256,
-    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
-    badge: "Promo",
-    href: "#",
-  },
-];
-
-interface ProductCardProps {
-  product?: typeof PRODUCTS[number];
+interface CardProps {
+  product: ProductListItem;
   className?: string;
 }
 
@@ -64,7 +25,7 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-export function ProductCard({ product = PRODUCTS[0], className }: ProductCardProps) {
+export function ProductCard({ product, className }: CardProps) {
   return (
     <div className={`flex flex-col overflow-hidden rounded-2xl border border-surface-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-surface-800 dark:bg-surface-900 ${className ?? ""}`}>
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface-100">
@@ -116,10 +77,11 @@ export function ProductCard({ product = PRODUCTS[0], className }: ProductCardPro
   );
 }
 
-export function ProductCardGrid({ products = PRODUCTS }: { products?: typeof PRODUCTS }) {
+export function ProductCardGrid({ products }: { products?: ProductListItem[] }) {
+  const items = products ?? [];
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {products.map((product) => (
+      {items.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
     </div>

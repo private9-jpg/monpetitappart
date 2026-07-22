@@ -17,14 +17,25 @@ import { cn } from "@/lib/utils";
  */
 function Alert({
   className,
+  variant = "default",
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & {
+  variant?: "default" | "destructive";
+}) {
+  const variants = {
+    default:
+      "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+    destructive:
+      "border-destructive text-destructive dark:border-destructive [&>svg]:text-destructive",
+  };
+
   return (
     <div
       role="alert"
       data-slot="alert"
       className={cn(
-        "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-sm",
+        "flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-sm",
+        variants[variant],
         className
       )}
       {...props}

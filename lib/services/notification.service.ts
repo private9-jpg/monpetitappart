@@ -25,7 +25,7 @@ export async function sendNotification(payload: NotificationPayload) {
         subject: payload.subject,
         html: payload.html,
         text: payload.text,
-      };
+      } as any;
       await (client.emails.send as any)(sendOptions);
     } catch (error) {
       logger.error("Failed to send email notification", error);

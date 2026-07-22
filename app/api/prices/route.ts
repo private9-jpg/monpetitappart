@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getUserFromRequest, unauthorized, forbidden } from "@/lib/auth";
 import { z } from "zod";
 import { getPriceHistory, recordPriceHistory } from "@/lib/services/price.service";

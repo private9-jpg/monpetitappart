@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     await recordAuditLog(request, "newsletter_" + result.status, "NewsletterSubscriber", email, { email, status: result.status }, undefined);
 
     return NextResponse.json({ message: result.message, status: result.status }, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

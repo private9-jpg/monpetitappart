@@ -39,14 +39,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
 
-  const { name, slug, affiliateUrl, currency = "EUR", isPublished = false } = parsed.data;
-
-  const existingProduct = await prisma.product.findUnique({ where: { slug } });
+  const existingProduct = await prisma.product.findUnique({ where: { slug: parsed.data.slug } });
   if (existingProduct) {
     return NextResponse.json({ error: "A product with that slug already exists" }, { status: 409 });
   }
 
-  const createData: Record<string, unknown> = {
+type ProductCreateData = {
+  name: string;
+  slug: string;
+  affiliateUrl: string;
+  currency: string;
+  isPublished: boolean;
+  productUrl?: string | null;
+  description?: string | null;
+  priceCents?: number | null;
+  merchant?: string | null;
+  imageUrl?: string | null;
+  publishedAt?: Date | null;
+};
+
+  const createData: ProductCreateData = {
     name: parsed.data.name,
     slug: parsed.data.slug,
     affiliateUrl: parsed.data.affiliateUrl,
@@ -65,7 +77,7 @@ export async function POST(request: NextRequest) {
     createData.publishedAt = null;
   }
 
-  const product = await prisma.product.create({ data: createData as any });
+  const product = await prisma.product.create({ data: createData });
   await recordAuditLog(request, "create_product", "Product", product.id, { authorId: currentUser.id, role: currentUser.role }, currentUser.id);
 
   return NextResponse.json(product, { status: 201 });

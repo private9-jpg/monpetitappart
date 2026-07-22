@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { trackClick, resolveProductRedirect, checkAffiliateLinksHealth } from "@/lib/services/affiliate.service";
+import { trackClick, resolveProductRedirect } from "@/lib/services/affiliate.service";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

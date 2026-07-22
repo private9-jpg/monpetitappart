@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     await recordAuditLog(request, "contact_submit", "Contact", undefined, { email: sanitized.email, subject: sanitized.subject }, undefined);
 
     return NextResponse.json({ message: "Nous avons bien reçu votre message. Nous vous répondrons dans les plus brefs délais." }, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

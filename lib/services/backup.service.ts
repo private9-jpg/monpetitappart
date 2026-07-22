@@ -71,12 +71,12 @@ export async function backupPostgreSQL() {
       await writeFileAtomic(sqlPath, dumpContent);
       logger.info("Backup SQL written", { path: sqlPath, size: dumpContent.length });
     } else {
-      const tables = ["User", "Article", "Product", "Merchant", "ProductOffer", "PriceHistory", "Comment", "NewsletterSubscriber", "AuditLog", "Report", "AffiliateLink", "AffiliateClick", "Conversion", "Redirect"];
+      const tables = ["user", "article", "product", "merchant", "productOffer", "priceHistory", "comment", "newsletterSubscriber", "auditLog", "report", "affiliateLink", "affiliateClick", "conversion", "redirect"] as const;
       const data: Record<string, unknown[]> = {};
 
       for (const table of tables) {
         try {
-          const result = await (prisma as any)[table.toLowerCase()].findMany();
+          const result = await (prisma as unknown as any)[table].findMany();
           data[table] = result;
         } catch {
           data[table] = [];

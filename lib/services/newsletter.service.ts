@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { prisma } from "@/lib/prisma";
 import { sendNotification } from "./notification.service";
 
-export async function subscribeToNewsletter(email: string, ip?: string) {
+export async function subscribeToNewsletter(email: string, _ip?: string) {
   const existing = await prisma.newsletterSubscriber.findUnique({ where: { email } });
 
   if (existing) {

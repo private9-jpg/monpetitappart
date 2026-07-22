@@ -125,7 +125,6 @@ export function parseCSV(csvText: string): ProductImportRow[] {
   const lines = csvText.split("\n").filter((line) => line.trim());
   if (lines.length < 2) return [];
 
-  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
   const rows: ProductImportRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {

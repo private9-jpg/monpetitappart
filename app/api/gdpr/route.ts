@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromRequest, unauthorized, forbidden, recordAuditLog } from "@/lib/auth";
+import { getUserFromRequest, unauthorized, recordAuditLog } from "@/lib/auth";
 import { exportUserData, anonymizeUser, deleteUser, cleanupOldComments } from "@/lib/services/gdpr.service";
 
 export async function GET(request: NextRequest) {

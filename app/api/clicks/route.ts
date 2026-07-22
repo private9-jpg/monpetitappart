@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     await recordAuditLog(request, "tracking_click", "AffiliateClick", click.id, { affiliateLinkId: link.id, source: parsed.data.source }, undefined);
 
     return NextResponse.json({ id: click.id, url: link.url }, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { commentModerationSchema, commentReportSchema } from "@/lib/validation";
 import { getUserFromRequest, forbidden, unauthorized, recordAuditLog } from "@/lib/auth";
-import { checkRateLimit } from "@/lib/ratelimit";
 import { sanitizeObject } from "@/lib/sanitize";
 import { notifyCommentRejected, notifyNewReport } from "@/lib/services/notification.service";
 

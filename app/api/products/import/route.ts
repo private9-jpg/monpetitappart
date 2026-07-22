@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest, forbidden, unauthorized, recordAuditLog } from "@/lib/auth";
-import { importProducts, parseCSV, toCSV } from "@/lib/services/product-import.service";
+import { importProducts, parseCSV } from "@/lib/services/product-import.service";
 
 export async function POST(request: NextRequest) {
   const currentUser = await getUserFromRequest(request);
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const result = await importProducts(rows);
     await recordAuditLog(request, "import_products", "Product", undefined, { imported: result.imported, skipped: result.skipped }, currentUser.id);
     return NextResponse.json(result, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erreur lors de l'import" }, { status: 500 });
   }
 }

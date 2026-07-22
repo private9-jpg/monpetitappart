@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { forbidden, getUserFromRequest, recordAuditLog, unauthorized } from "@/lib/auth";
+import { getUserFromRequest, recordAuditLog, unauthorized } from "@/lib/auth";
 import { sanitizeObject } from "@/lib/sanitize";
 import { z } from "zod";
 

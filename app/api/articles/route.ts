@@ -26,8 +26,6 @@ const articleCreateSchema = z.object({
   authorId: z.string().uuid(),
 });
 
-const articleUpdateSchema = articleCreateSchema.partial().extend({ slug: z.string().min(1).max(200) });
-
 export async function GET(request: NextRequest) {
   const params = Object.fromEntries(request.nextUrl.searchParams);
   const parsed = articleQuerySchema.safeParse(params);

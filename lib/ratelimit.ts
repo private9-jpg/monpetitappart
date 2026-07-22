@@ -10,7 +10,6 @@ export function checkRateLimit({ key, limit = 5, windowMs = 60_000 }: RateLimitO
   const now = Date.now();
   const bucket = key ?? "global";
   const entries = stores.get(bucket) ?? [];
-  const windowStart = now - windowMs;
   const allowed: { tokens: number; expiresAt: number }[] = [];
 
   let tokens = 0;

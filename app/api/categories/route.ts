@@ -14,8 +14,6 @@ const categoryCreateSchema = z.object({
   description: z.string().max(500).optional(),
 });
 
-const categoryUpdateSchema = categoryCreateSchema.partial();
-
 export async function GET(request: NextRequest) {
   const params = Object.fromEntries(request.nextUrl.searchParams);
   const parsed = categoryQuerySchema.safeParse(params);

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRedis } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const checks: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     status: "healthy",
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(checks, { status: statusCode });
 }
 
-export async function HEAD(request: NextRequest) {
+export async function HEAD() {
   try {
     await prisma.$queryRaw`SELECT 1`;
     return new NextResponse(null, { status: 200 });

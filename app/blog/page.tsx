@@ -33,69 +33,18 @@ export default function BlogPage() {
   const pageItems = filtered.slice(start, start + BLOG_PAGE_SIZE);
 
   return (
-    <SiteLayout>
-      <div className="flex flex-col">
-        <Section className="pt-8">
-          <div className="flex flex-col gap-2 text-center">
-            <h1 className="font-display text-4xl font-semibold tracking-tight text-surface-900 sm:text-5xl dark:text-surface-50">
-              Blog
-            </h1>
-            <p className="mx-auto max-w-2xl text-lg text-surface-600 dark:text-surface-400">
-              Actualités, astuces et inspirations pour votre logement.
-            </p>
-          </div>
-        </Section>
-
-        <Section>
-          <div className="flex flex-col gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-surface-500" />
-              <Input
-                type="search"
-                placeholder="Rechercher un article..."
-                value={query}
-                onChange={(e) => { setQuery(e.target.value); setPage(1); }}
-                className="pl-9"
-                aria-label="Rechercher un article"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {BLOG_CATEGORIES.map((cat) => (
-                <Button
-                  key={cat}
-                  variant={category === cat ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCategory(cat)}
-                  aria-pressed={category === cat}
-                >
-                  {cat}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </Section>
-
-        <Section>
-          {pageItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {pageItems.map((post) => (
-                <ArticleCard key={post.id} article={post} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-surface-600 dark:text-surface-400">Aucun article trouvé.</p>
-          )}
-        </Section>
-
-        <Section>
-          <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setPage} />
-        </Section>
-
-        <Section>
-          <Newsletter />
-        </Section>
+    <Section>
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-2 text-center">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-surface-900 sm:text-4xl dark:text-surface-50">
+            Blog
+          </h1>
+          <p className="mx-auto max-w-2xl text-lg text-surface-600 dark:text-surface-400">
+            Actualités, conseils et témoignages sur le monde de l&apos;immobilier et de l&apos;appartement.
+          </p>
+        </div>
+        <ArticleCardGrid variant="vertical" />
       </div>
-    </SiteLayout>
+    </Section>
   );
 }

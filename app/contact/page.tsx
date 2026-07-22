@@ -4,8 +4,41 @@ import { ContactForm } from "@/components/contact/ContactForm";
 import { Newsletter } from "@/components/newsletter/Newsletter";
 import { SiteLayout } from "@/components/layouts/SiteLayout";
 import { Section } from "@/components/ui/section";
+import { useState } from "react";
 
 export default function ContactPage() {
+  const [status, setStatus] = useState<string | null>(null);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus(null);
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
+    const body = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      subject: formData.get("subject"),
+      message: formData.get("message"),
+      honey: formData.get("honey"),
+    };
+
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      setError(data.error || "Erreur lors de l'envoi");
+      return;
+    }
+
+    setStatus(data.message || "Message envoyé");
+    event.currentTarget.reset();
+  }
+
   return (
     <SiteLayout>
       <div className="flex flex-col">
@@ -35,3 +68,7 @@ export default function ContactPage() {
     </SiteLayout>
   );
 }
+function setError(arg0: null) {
+  throw new Error("Function not implemented.");
+}
+

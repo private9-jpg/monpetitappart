@@ -10,5 +10,6 @@ export async function GET(request: NextRequest) {
     email: currentUser.email,
     role: currentUser.role,
     isActive: currentUser.isActive,
+    twoFactorEnabled: currentUser.twoFactorEnabled,
   });
 }

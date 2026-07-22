@@ -6,6 +6,7 @@ import { ProductFilters } from "@/components/products/ProductFilters";
 import { Pagination } from "@/components/guides/Pagination";
 import { Newsletter } from "@/components/newsletter/Newsletter";
 import { SiteLayout } from "@/components/layouts/SiteLayout";
+import { ProductCardGrid } from "@/components/product/ProductCard";
 import { Section } from "@/components/ui/section";
 
 export default function ProduitsPage() {

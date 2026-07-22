@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { GuideGrid, GUIDES_DATA, GUIDES_PAGE_SIZE } from "@/components/guides/GuideGrid";
 import { Pagination } from "@/components/guides/Pagination";
 import { Newsletter } from "@/components/newsletter/Newsletter";
+import { ArticleCardGrid } from "@/components/article/ArticleCard";
 import { Section } from "@/components/ui/section";
 
 export default function GuidesPage() {

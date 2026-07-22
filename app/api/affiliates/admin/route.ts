@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { forbidden, getUserFromRequest, unauthorized } from "@/lib/auth";
+import { forbidden, getUserFromRequest, recordAuditLog, unauthorized } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const currentUser = await getUserFromRequest(request);
@@ -39,5 +39,6 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  await recordAuditLog(request, "create_affiliate_link", "AffiliateLink", affiliateLink.id, { createdBy: currentUser.id, productId }, currentUser.id);
   return NextResponse.json(affiliateLink, { status: 201 });
 }

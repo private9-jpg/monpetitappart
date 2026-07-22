@@ -2,6 +2,7 @@ import { SiteLayout } from "@/components/layouts/SiteLayout";
 import { Hero } from "@/components/hero/Hero";
 import { ComparisonCardGrid } from "@/components/comparison/ComparisonCard";
 import { Newsletter } from "@/components/newsletter/Newsletter";
+import { ComparisonTable } from "@/components/comparison/ComparisonTable";
 import { Section } from "@/components/ui/section";
 
 export default function ComparatifsPage() {

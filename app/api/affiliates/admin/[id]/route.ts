@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { forbidden, getUserFromRequest, unauthorized } from "@/lib/auth";
+import { forbidden, getUserFromRequest, recordAuditLog, unauthorized } from "@/lib/auth";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,6 +18,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     },
   });
 
+  await recordAuditLog(request, "update_affiliate_link", "AffiliateLink", id, { updatedBy: currentUser.id }, currentUser.id);
   return NextResponse.json(link);
 }
 
@@ -28,5 +29,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   if (currentUser.role !== "ADMIN") return forbidden();
 
   await prisma.affiliateLink.delete({ where: { id } });
+  await recordAuditLog(request, "delete_affiliate_link", "AffiliateLink", id, { deletedBy: currentUser.id }, currentUser.id);
   return NextResponse.json({ success: true });
 }

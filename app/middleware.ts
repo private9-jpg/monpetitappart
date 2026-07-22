@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
 
 const protectedRoutes = ["/dashboard", "/products", "/(admin)"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
 
@@ -11,8 +12,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const authToken = request.cookies.get("auth_token")?.value;
-  if (!authToken) {
+  const user = await getUserFromRequest(request);
+  if (!user || !user.isActive) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);

@@ -42,6 +42,36 @@ Never commit `.env.local` or any real secrets. Only commit `.env.example`.
 
 If you use a separate preproduction or production database, set appropriate values in those environments and never point previews or tests at production data.
 
+## Payload CMS
+
+This project uses Payload CMS 3.x as the back-office. Payload is started separately from the Next.js app and runs on `http://localhost:3001` by default.
+
+1. Make sure `.env.local` contains `PAYLOAD_SECRET` and `MONGODB_URI`.
+2. Start Payload locally with:
+
+```bash
+npm run payload:dev
+```
+
+3. Open the admin UI at:
+
+```bash
+http://localhost:3001/admin
+```
+
+Payload stores its own content in MongoDB, while the main Next.js app uses PostgreSQL for application data.
+
+This project already includes the following Payload collections:
+- `users`
+- `articles`
+- `products`
+- `merchants`
+- `affiliate-links`
+- `product-offers`
+- `comments`
+
+If you want to use Payload as the main CMS and back-office, start Payload first, then run the Next.js app.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

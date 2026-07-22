@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+type UserRole = "ADMIN" | "EDITOR" | "WRITER" | "MODERATOR" | "ANALYST";
+
 async function main() {
   await prisma.auditLog.deleteMany();
   await prisma.newsletterSubscriber.deleteMany();
@@ -22,12 +24,12 @@ async function main() {
   await prisma.session.deleteMany();
   await prisma.user.deleteMany();
 
-  const userData = [
+  const userData: Array<{ email: string; passwordHash: string; role: UserRole }> = [
     { email: "admin@monpetitappart.fr", passwordHash: "admin-hash", role: "ADMIN" },
     { email: "editor@monpetitappart.fr", passwordHash: "editor-hash", role: "EDITOR" },
   ];
 
-  await prisma.user.createMany({ data: userData, skipDuplicates: true });
+  await prisma.user.createMany({ data: userData,  });
   const users = await prisma.user.findMany();
 
   await prisma.merchant.createMany({
@@ -38,7 +40,6 @@ async function main() {
       { name: "Marchand Delta", slug: "marchand-delta", websiteUrl: "https://marchand-delta.example" },
       { name: "Marchand Epsilon", slug: "marchand-epsilon", websiteUrl: "https://marchand-epsilon.example" },
     ],
-    skipDuplicates: true,
   });
   const merchants = await prisma.merchant.findMany();
 
@@ -47,7 +48,6 @@ async function main() {
       { name: "Électroménager", slug: "electromenager" },
       { name: "Mobilier", slug: "mobilier" },
     ],
-    skipDuplicates: true,
   });
   const clusters = await prisma.cluster.findMany();
 
@@ -57,7 +57,6 @@ async function main() {
       { name: "Mobilier", slug: "mobilier" },
       { name: "Décoration", slug: "decoration" },
     ],
-    skipDuplicates: true,
   });
   const categories = await prisma.productCategory.findMany();
 
@@ -129,7 +128,7 @@ async function main() {
     },
   ];
 
-  await prisma.product.createMany({ data: productsData, skipDuplicates: true });
+  await prisma.product.createMany({ data: productsData,  });
   const products = await prisma.product.findMany();
 
   await prisma.productCluster.createMany({
@@ -137,7 +136,6 @@ async function main() {
       productId: product.id,
       clusterId: clusters[index % clusters.length].id,
     })),
-    skipDuplicates: true,
   });
 
   await prisma.productCategoryRelation.createMany({
@@ -145,7 +143,6 @@ async function main() {
       { productId: product.id, categoryId: categories[index % categories.length].id },
       { productId: product.id, categoryId: categories[(index + 1) % categories.length].id },
     ]),
-    skipDuplicates: true,
   });
 
   await prisma.productOffer.createMany({
@@ -158,7 +155,6 @@ async function main() {
       startsAt: new Date(),
       isActive: true,
     })),
-    skipDuplicates: true,
   });
 
   await prisma.priceHistory.createMany({
@@ -168,7 +164,6 @@ async function main() {
       priceCents: product.priceCents ?? 0,
       currency: product.currency,
     })),
-    skipDuplicates: true,
   });
 
   await prisma.article.createMany({
@@ -194,7 +189,6 @@ async function main() {
         publishedAt: new Date(),
       },
     ]),
-    skipDuplicates: true,
   });
   const articles = await prisma.article.findMany();
 
@@ -205,7 +199,7 @@ async function main() {
     { productId: product.id, source: "blog", url: `${product.affiliateUrl}?utm_source=blog` },
   ]);
 
-  await prisma.affiliateLink.createMany({ data: affiliateLinksData, skipDuplicates: true });
+  await prisma.affiliateLink.createMany({ data: affiliateLinksData,  });
   const affiliateLinks = await prisma.affiliateLink.findMany();
 
   const affiliateClicksData = affiliateLinks.slice(0, 10).flatMap((link, index) => [
@@ -213,7 +207,7 @@ async function main() {
     { affiliateLinkId: link.id, source: index % 2 === 0 ? "search" : "blog", ip: "127.0.0.1" },
   ]);
 
-  await prisma.affiliateClick.createMany({ data: affiliateClicksData, skipDuplicates: true });
+  await prisma.affiliateClick.createMany({ data: affiliateClicksData,  });
   const affiliateClicks = await prisma.affiliateClick.findMany();
 
   await prisma.conversion.createMany({
@@ -224,7 +218,6 @@ async function main() {
       currency: products[index].currency,
       status: index % 2 === 0 ? "COMPLETED" : "PENDING",
     })),
-    skipDuplicates: true,
   });
 
   await prisma.comment.createMany({
@@ -232,7 +225,6 @@ async function main() {
       { targetType: "PRODUCT", targetId: products[0].id, content: "Super produit !", isPublished: true, authorId: users[1].id },
       { targetType: "ARTICLE", targetId: articles[0].id, content: "Article intéressant.", isPublished: true, authorId: users[0].id },
     ],
-    skipDuplicates: true,
   });
 
   await prisma.report.createMany({
@@ -240,7 +232,6 @@ async function main() {
       { targetType: "PRODUCT", targetId: products[1].id, reason: "Problème de qualité", status: "OPEN", reporterId: users[0].id },
       { targetType: "ARTICLE", targetId: articles[1].id, reason: "Contenu inapproprié", status: "OPEN", reporterId: users[1].id },
     ],
-    skipDuplicates: true,
   });
 
   await prisma.newsletterSubscriber.createMany({
@@ -249,7 +240,6 @@ async function main() {
       { email: "subscriber2@example.com" },
       { email: "subscriber3@example.com" },
     ],
-    skipDuplicates: true,
   });
 
   await prisma.redirect.createMany({
@@ -257,15 +247,13 @@ async function main() {
       { sourcePath: "/ancien-produit", destinationUrl: "https://example.com/produit" },
       { sourcePath: "/old-blog", destinationUrl: "https://example.com/blog" },
     ],
-    skipDuplicates: true,
   });
 
   await prisma.auditLog.createMany({
     data: [
-      { action: "seed", entity: "Product", entityId: products[0].id, metadata: { source: "seed" } },
-      { action: "seed", entity: "Article", entityId: articles[0].id, metadata: { source: "seed" } },
+      { action: "seed", entity: "Product", entityId: products[0].id, metadata: JSON.stringify({ source: "seed" }) },
+      { action: "seed", entity: "Article", entityId: articles[0].id, metadata: JSON.stringify({ source: "seed" }) },
     ],
-    skipDuplicates: true,
   });
 }
 

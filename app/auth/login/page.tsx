@@ -10,6 +10,8 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -19,11 +21,16 @@ export default function LoginPage() {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, twoFactorCode: twoFactorRequired ? twoFactorCode : undefined }),
     });
 
+    const data = await response.json();
     if (!response.ok) {
-      const data = await response.json();
+      if (data.twoFactorRequired) {
+        setTwoFactorRequired(true);
+        setError("Code 2FA requis");
+        return;
+      }
       setError(data.error || "Échec de connexion");
       return;
     }
@@ -44,6 +51,12 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-zinc-700">Mot de passe</label>
             <Input value={password} onChange={(event) => setPassword(event.target.value)} type="password" required />
           </div>
+          {twoFactorRequired ? (
+            <div>
+              <label className="block text-sm font-medium text-zinc-700">Code 2FA</label>
+              <Input value={twoFactorCode} onChange={(event) => setTwoFactorCode(event.target.value)} type="text" required />
+            </div>
+          ) : null}
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
           <Button type="submit">Se connecter</Button>
         </form>

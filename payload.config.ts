@@ -1,4 +1,6 @@
 import type { CollectionConfig } from "payload";
+import { buildConfig } from "payload";
+import { postgresAdapter } from "@payloadcms/db-postgres";
 
 const ArticleTypes = [
   { label: "GUIDE", value: "GUIDE" },
@@ -512,10 +514,14 @@ const Comments: CollectionConfig = {
   ],
 };
 
-export default {
+export default buildConfig({
   serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL || "http://localhost:3000",
-  mongoURL: process.env.MONGODB_URI || "mongodb://localhost:27017/monpetitappart",
   secret: process.env.PAYLOAD_SECRET || "change-me",
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URL,
+    },
+  }),
   collections: [
     Users,
     Articles,
@@ -525,4 +531,4 @@ export default {
     ProductOffers,
     Comments,
   ],
-} as any;
+});

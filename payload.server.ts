@@ -11,13 +11,12 @@ const start = async () => {
     ...config,
     express: app,
     secret: process.env.PAYLOAD_SECRET || "change-me",
-    mongoURL: process.env.MONGODB_URI || "mongodb://localhost:27017/monpetitappart",
     onInit: () => {
       app.listen(3001, () => {
         console.log("Payload admin running at http://localhost:3001");
       });
     },
-  });
+  } as any);
 };
 
 start().catch((error) => {

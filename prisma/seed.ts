@@ -25,15 +25,6 @@ async function main() {
   await prisma.session.deleteMany();
   await prisma.user.deleteMany();
 
-<<<<<<< HEAD
-  const userData = [
-    { email: "admin@monpetitappart.fr", passwordHash: "admin-hash", role: "ADMIN" as const },
-    { email: "editor@monpetitappart.fr", passwordHash: "editor-hash", role: "EDITOR" as const },
-  ];
-
-  await prisma.user.createMany({ data: userData, skipDuplicates: true });
-  const users = await prisma.user.findMany() as Array<{ id: string; email: string }>;
-=======
   const adminPassword = await hash("admin123", 10);
   const editorPassword = await hash("editor123", 10);
 
@@ -42,9 +33,8 @@ async function main() {
     { email: "editor@monpetitappart.fr", passwordHash: editorPassword, role: "EDITOR" },
   ];
 
-  await prisma.user.createMany({ data: userData,  });
+  await prisma.user.createMany({ data: userData });
   const users = await prisma.user.findMany();
->>>>>>> e8fa4b422aa88fa447feb98a57e77f8634f7fabb
 
   await prisma.merchant.createMany({
     data: [
@@ -142,13 +132,8 @@ async function main() {
     },
   ];
 
-<<<<<<< HEAD
-  await prisma.product.createMany({ data: productsData, skipDuplicates: true });
-  const products = await prisma.product.findMany() as Array<{ id: string; name: string; priceCents: number | null; currency: string; productUrl: string | null; affiliateUrl: string | null }>;
-=======
-  await prisma.product.createMany({ data: productsData,  });
+  await prisma.product.createMany({ data: productsData });
   const products = await prisma.product.findMany();
->>>>>>> e8fa4b422aa88fa447feb98a57e77f8634f7fabb
 
   await prisma.productCluster.createMany({
     data: products.map((product, index) => ({
@@ -218,26 +203,16 @@ async function main() {
     { productId: product.id, source: "blog", url: `${product.affiliateUrl}?utm_source=blog` },
   ]);
 
-<<<<<<< HEAD
-  await prisma.affiliateLink.createMany({ data: affiliateLinksData, skipDuplicates: true });
-  const affiliateLinks = await prisma.affiliateLink.findMany() as Array<{ id: string }>;
-=======
-  await prisma.affiliateLink.createMany({ data: affiliateLinksData,  });
+  await prisma.affiliateLink.createMany({ data: affiliateLinksData });
   const affiliateLinks = await prisma.affiliateLink.findMany();
->>>>>>> e8fa4b422aa88fa447feb98a57e77f8634f7fabb
 
   const affiliateClicksData = affiliateLinks.slice(0, 10).flatMap((link, index) => [
     { affiliateLinkId: link.id, source: index % 2 === 0 ? "newsletter" : "instagram", ip: "127.0.0.1" },
     { affiliateLinkId: link.id, source: index % 2 === 0 ? "search" : "blog", ip: "127.0.0.1" },
   ]);
 
-<<<<<<< HEAD
-  await prisma.affiliateClick.createMany({ data: affiliateClicksData, skipDuplicates: true });
-  const affiliateClicks = await prisma.affiliateClick.findMany() as Array<{ id: string; affiliateLinkId: string }>;
-=======
-  await prisma.affiliateClick.createMany({ data: affiliateClicksData,  });
+  await prisma.affiliateClick.createMany({ data: affiliateClicksData });
   const affiliateClicks = await prisma.affiliateClick.findMany();
->>>>>>> e8fa4b422aa88fa447feb98a57e77f8634f7fabb
 
   await prisma.conversion.createMany({
     data: affiliateClicks.slice(0, 4).map((click, index) => ({

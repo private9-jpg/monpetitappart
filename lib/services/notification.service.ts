@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 type NotificationPayload = {
   to: string;
   subject: string;
@@ -26,7 +28,8 @@ export async function sendNotification(payload: NotificationPayload) {
       };
       await (client.emails.send as any)(sendOptions);
     } catch (error) {
-      console.error("Failed to send email notification:", error);
+      logger.error("Failed to send email notification", error);
+      throw error;
     }
   }
 

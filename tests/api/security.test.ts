@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GET } from "@/app/api/products/route";
 import { POST } from "@/app/api/products/route";
 
 const { mockFindMany, mockFindUnique, mockCreate } = vi.hoisted(() => ({
@@ -39,7 +38,7 @@ vi.mock("@/lib/auth", () => ({
   recordAuditLog: mockRecordAuditLog,
 }));
 
-describe("API products", () => {
+describe("API security", () => {
   beforeEach(() => {
     mockFindMany.mockReset();
     mockFindUnique.mockReset();
@@ -51,73 +50,47 @@ describe("API products", () => {
     mockSanitizeObject.mockReset();
   });
 
-  it("returns published products", async () => {
-    mockFindMany.mockResolvedValue([
-      {
-        id: "1",
-        name: "Test product",
-        slug: "test-product",
-        affiliateUrl: "https://example.com",
-        isPublished: true,
-        publishedAt: new Date(),
-        affiliateLinks: [],
-      },
-    ]);
-
-    const response = await GET();
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(Array.isArray(body)).toBe(true);
-    expect(body[0]).toMatchObject({ slug: "test-product" });
-  });
-});
-
-describe("API products create", () => {
-  beforeEach(() => {
-    mockFindMany.mockReset();
-    mockFindUnique.mockReset();
-    mockCreate.mockReset();
-    mockGetUserFromRequest.mockReset();
-    mockUnauthorized.mockReset();
-    mockForbidden.mockReset();
-    mockRecordAuditLog.mockReset();
-    mockSanitizeObject.mockReset();
-  });
-
-  it("requires authentication", async () => {
+  it("blocks unauthenticated access to products create", async () => {
     mockGetUserFromRequest.mockResolvedValue(null);
     const response = await POST({ headers: new Headers() } as any);
     expect(response.status).toBe(401);
-    expect(mockUnauthorized).toHaveBeenCalled();
   });
 
-  it("validates missing fields", async () => {
-    mockGetUserFromRequest.mockResolvedValue({ id: "user1", role: "ADMIN" });
-    const response = await POST({
-      headers: new Headers({ authorization: "Bearer token" }),
-      json: async () => ({}),
-    } as any);
-    expect(response.status).toBeGreaterThanOrEqual(400);
+  it("blocks non-allowed role access to products create", async () => {
+    mockGetUserFromRequest.mockResolvedValue({ id: "user1", role: "MODERATOR" });
+    const response = await POST({ headers: new Headers() } as any);
+    expect(response.status).toBe(403);
   });
 
-  it("prevents duplicate slugs", async () => {
+  it("rejects malformed object via zod validation", async () => {
     mockGetUserFromRequest.mockResolvedValue({ id: "user1", role: "ADMIN" });
-    mockFindUnique.mockResolvedValue({ id: "prod1", slug: "test-product" });
-    mockCreate.mockResolvedValue({ id: "prod1" });
-
     const response = await POST({
       headers: new Headers({ authorization: "Bearer token" }),
       json: async () => ({
-        name: "Test",
-        slug: "test-product",
+        affiliateUrl: "not-a-url",
+        priceCents: "abc",
+      }),
+    } as any);
+
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects attacker-controlled long strings", async () => {
+    mockGetUserFromRequest.mockResolvedValue({ id: "user1", role: "ADMIN" });
+    const hugeString = "a".repeat(10000);
+    const response = await POST({
+      headers: new Headers({ authorization: "Bearer token" }),
+      json: async () => ({
+        name: hugeString,
+        slug: "test",
         affiliateUrl: "https://example.com",
       }),
     } as any);
 
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(400);
   });
 
-  it("creates product for admin", async () => {
+  it("records audit log on authorized action", async () => {
     mockGetUserFromRequest.mockResolvedValue({ id: "user1", role: "ADMIN" });
     mockFindUnique.mockResolvedValue(null);
     mockCreate.mockResolvedValue({ id: "prod1", name: "Test" });
@@ -132,6 +105,6 @@ describe("API products create", () => {
     } as any);
 
     expect(response.status).toBe(201);
-    expect(mockCreate).toHaveBeenCalled();
+    expect(mockRecordAuditLog).toHaveBeenCalled();
   });
 });

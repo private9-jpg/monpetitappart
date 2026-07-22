@@ -1,90 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) project.
 
 ## Getting Started
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-## PostgreSQL database setup
-
-This project uses PostgreSQL 16 as the primary database. Local development is configured through `docker-compose.yml`, which starts PostgreSQL and Adminer.
-
 1. Copy `.env.example` to `.env.local`.
 2. Update the example values if needed.
-3. Start the database locally with:
+3. Start the infrastructure locally with:
 
 ```bash
 docker compose up -d
 ```
 
-The application expects these environment variables:
-
-- `DATABASE_URL`
-- `DIRECT_URL`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `POSTGRES_DB`
-
-Never commit `.env.local` or any real secrets. Only commit `.env.example`.
-
-If you use a separate preproduction or production database, set appropriate values in those environments and never point previews or tests at production data.
-
-## Payload CMS
-
-This project uses Payload CMS 3.x as the back-office. Payload is started separately from the Next.js app and runs on `http://localhost:3001` by default.
-
-1. Make sure `.env.local` contains `PAYLOAD_SECRET` and `MONGODB_URI`.
-2. Start Payload locally with:
+4. Run database migrations:
 
 ```bash
-npm run payload:dev
+npx prisma migrate deploy
 ```
 
-3. Open the admin UI at:
+5. Start the development server:
 
 ```bash
-http://localhost:3001/admin
+npm run dev
 ```
 
-Payload stores its own content in MongoDB, while the main Next.js app uses PostgreSQL for application data.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-This project already includes the following Payload collections:
-- `users`
-- `articles`
-- `products`
-- `merchants`
-- `affiliate-links`
-- `product-offers`
-- `comments`
+## Infrastructure
 
-If you want to use Payload as the main CMS and back-office, start Payload first, then run the Next.js app.
+The project is containerized with Docker and Compose:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `postgres` — PostgreSQL 16 on port 5432
+- `redis` — Redis 7 on port 6379
+- `adminer` — database admin UI on port 8080
+- `app` — Next.js app on port 3000
+- `payload` — Payload CMS admin on port 3001
+- `backup` — daily PostgreSQL backup to `./backups`
 
-## Learn More
+## Monitoring
 
-To learn more about Next.js, take a look at the following resources:
+Health check endpoint: `GET /api/health`
+Cron endpoint: `POST /api/cron`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## CI/CD
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+GitHub Actions runs lint, typecheck, tests, and build on every push and PR to `private`.
 
-## Deploy on Vercel
+## Observability
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Sentry**: error tracking enabled in production via `@sentry/nextjs`
+- **Logs**: structured JSON logs through `lib/logger.ts`
+- **Backups**: automatic daily SQL dumps stored in `./backups`

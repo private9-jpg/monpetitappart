@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { newsletterSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/ratelimit";
-import { recordAuditLog } from "@/lib/auth";
+import { recordAuditLog, getUserFromRequest, unauthorized, forbidden } from "@/lib/auth";
+import { subscribeToNewsletter } from "@/lib/services/newsletter.service";
+import { isRedisAvailable, checkRedisRateLimit } from "@/lib/redis";
 
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? undefined;
-    const rateLimitKey = `newsletter:${ip}`;
-    const rate = checkRateLimit({ key: rateLimitKey, limit: 5, windowMs: 60_000 });
-    if (!rate.success) {
+    const redisAvailable = await isRedisAvailable();
+    const rateLimit = redisAvailable
+      ? await checkRedisRateLimit(`newsletter:${ip}`, 5, 60_000)
+      : checkRateLimit({ key: `newsletter:${ip}`, limit: 5, windowMs: 60_000 });
+
+    if (!rateLimit.success) {
       return NextResponse.json({ error: "Trop de requêtes. Veuillez réessayer dans un instant." }, { status: 429 });
     }
 
@@ -20,27 +25,30 @@ export async function POST(request: NextRequest) {
     }
 
     const { email } = parsed.data;
+    const result = await subscribeToNewsletter(email, ip);
 
-    const existing = await prisma.newsletterSubscriber.findUnique({ where: { email } });
-    if (existing) {
-      if (!existing.isSubscribed) {
-        await prisma.newsletterSubscriber.update({
-          where: { email },
-          data: { isSubscribed: true, subscribedAt: new Date(), unsubscribedAt: null },
-        });
-        return NextResponse.json({ message: "Réinscription confirmée" }, { status: 200 });
-      }
-      return NextResponse.json({ message: "Vous êtes déjà inscrit" }, { status: 200 });
-    }
+    await recordAuditLog(request, "newsletter_" + result.status, "NewsletterSubscriber", email, { email, status: result.status }, undefined);
 
-    await prisma.newsletterSubscriber.create({
-      data: { email, isSubscribed: true },
-    });
-
-    await recordAuditLog(request, "newsletter_subscribe", "NewsletterSubscriber", email, { email }, undefined);
-
-    return NextResponse.json({ message: "Inscription réussie. Un email de confirmation vous a été envoyé." }, { status: 201 });
+    return NextResponse.json({ message: result.message, status: result.status }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
+}
+
+export async function GET(request: NextRequest) {
+  const currentUser = await getUserFromRequest(request);
+  if (!currentUser) return unauthorized();
+  if (currentUser.role !== "ADMIN") return forbidden();
+
+  const isSubscribed = request.nextUrl.searchParams.get("isSubscribed");
+  const limit = request.nextUrl.searchParams.get("limit");
+
+  const subscribers = await prisma.newsletterSubscriber.findMany({
+    where: isSubscribed !== null ? { isSubscribed: isSubscribed === "true" } : undefined,
+    orderBy: { createdAt: "desc" },
+    take: limit ? parseInt(limit) : 100,
+  });
+
+  await recordAuditLog(request, "list_newsletters", "NewsletterSubscriber", undefined, { count: subscribers.length }, currentUser.id);
+  return NextResponse.json(subscribers);
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { trackingClickSchema } from "@/lib/validation";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { recordAuditLog } from "@/lib/auth";
+import { sanitizeObject } from "@/lib/sanitize";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +15,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const parsed = trackingClickSchema.safeParse(body);
+    const sanitized = sanitizeObject(body as Record<string, unknown>, 200);
+    const parsed = trackingClickSchema.safeParse(sanitized);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
     }

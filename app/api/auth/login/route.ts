@@ -70,5 +70,16 @@ export async function POST(request: NextRequest) {
     sameSite: "lax",
   });
 
+  if (user.twoFactorEnabled) {
+    response.cookies.set({
+      name: "2fa_verified",
+      value: "true",
+      httpOnly: true,
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+      sameSite: "lax",
+    });
+  }
+
   return response;
 }

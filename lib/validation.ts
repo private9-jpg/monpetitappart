@@ -28,6 +28,8 @@ export const commentCreateSchema = z.object({
   authorName: z.string().min(2).max(100).optional(),
   authorEmail: z.string().email().optional(),
   rating: z.number().int().min(0).max(5).optional(),
+  honeypot: z.string().optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export const commentModerationSchema = z.object({

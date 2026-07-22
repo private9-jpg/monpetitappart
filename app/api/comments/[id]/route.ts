@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { commentModerationSchema, commentReportSchema } from "@/lib/validation";
 import { getUserFromRequest, forbidden, unauthorized, recordAuditLog } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { sanitizeObject } from "@/lib/sanitize";
+import { notifyCommentRejected, notifyNewReport } from "@/lib/services/notification.service";
 
 export async function PATCH(
   request: NextRequest,
@@ -14,7 +16,8 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  const parsed = commentModerationSchema.safeParse(body);
+  const sanitized = sanitizeObject(body as Record<string, unknown>, 500);
+  const parsed = commentModerationSchema.safeParse(sanitized);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
@@ -37,6 +40,10 @@ export async function PATCH(
     data,
     include: { author: { select: { id: true, email: true, role: true } } },
   });
+
+  if (parsed.data.status === "REJECTED") {
+    await notifyCommentRejected(comment.id, parsed.data.rejectionReason);
+  }
 
   await recordAuditLog(request, "moderate_comment", "Comment", comment.id, { status: parsed.data.status }, currentUser.id);
   return NextResponse.json(updated);
@@ -70,7 +77,8 @@ export async function POST(
 
   const { id } = await params;
   const body = await request.json();
-  const parsed = commentReportSchema.safeParse(body);
+  const sanitized = sanitizeObject(body as Record<string, unknown>, 500);
+  const parsed = commentReportSchema.safeParse(sanitized);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
@@ -82,7 +90,7 @@ export async function POST(
 
   const existing = await prisma.report.findFirst({
     where: {
-      targetType: "PRODUCT",
+      targetType: "COMMENT",
       targetId: id,
       reporterId: currentUser.id,
       status: { not: "DISMISSED" },
@@ -94,7 +102,7 @@ export async function POST(
 
   await prisma.report.create({
     data: {
-      targetType: "PRODUCT",
+      targetType: "COMMENT",
       targetId: id,
       reporterId: currentUser.id,
       reason: parsed.data.reason,
@@ -107,6 +115,7 @@ export async function POST(
     data: { spamScore: { increment: 5 } },
   });
 
+  await notifyNewReport(comment.id, "COMMENT", comment.id, parsed.data.reason);
   await recordAuditLog(request, "report_comment", "Comment", comment.id, { reason: parsed.data.reason }, currentUser.id);
   return NextResponse.json({ message: "Signalement enregistré" }, { status: 201 });
 }

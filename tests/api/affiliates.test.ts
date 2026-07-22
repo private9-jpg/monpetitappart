@@ -12,6 +12,9 @@ vi.mock("@/lib/prisma", () => {
         })),
         update: vi.fn(() => ({ id: "link1" })),
       },
+      affiliateClick: {
+        create: vi.fn(() => ({ id: "click1" })),
+      },
     },
   };
 });

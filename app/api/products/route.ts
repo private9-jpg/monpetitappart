@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { forbidden, getUserFromRequest, unauthorized, recordAuditLog } from "@/lib/auth";
+import { sanitizeObject } from "@/lib/sanitize";
+import { z } from "zod";
+
+const productCreateSchema = z.object({
+  name: z.string().min(1).max(200),
+  slug: z.string().min(1).max(200),
+  affiliateUrl: z.string().url(),
+  currency: z.string().default("EUR"),
+  isPublished: z.boolean().default(false),
+  productUrl: z.string().url().optional(),
+  description: z.string().max(5000).optional(),
+  priceCents: z.number().int().nonnegative().optional(),
+  merchant: z.string().max(200).optional(),
+  imageUrl: z.string().url().optional(),
+});
 
 export async function GET() {
   const products = await prisma.product.findMany({
@@ -18,29 +33,31 @@ export async function POST(request: NextRequest) {
   if (!["ADMIN", "EDITOR", "WRITER"].includes(currentUser.role)) return forbidden();
 
   const body = await request.json();
-  const { name, slug, affiliateUrl, currency = "EUR", isPublished = false } = body;
-
-  if (!name || !slug || !affiliateUrl) {
-    return NextResponse.json({ error: "name, slug and affiliateUrl are required" }, { status: 400 });
+  const sanitized = sanitizeObject(body as Record<string, unknown>, 5000);
+  const parsed = productCreateSchema.safeParse(sanitized);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
+
+  const { name, slug, affiliateUrl, currency = "EUR", isPublished = false } = parsed.data;
 
   const existingProduct = await prisma.product.findUnique({ where: { slug } });
   if (existingProduct) {
     return NextResponse.json({ error: "A product with that slug already exists" }, { status: 409 });
   }
 
-  const createData: any = {
-    name,
-    slug,
-    affiliateUrl,
-    currency,
-    isPublished: Boolean(isPublished),
-    productUrl: body.productUrl,
-    description: body.description,
-    priceCents: body.priceCents,
-    merchant: body.merchant,
-    imageUrl: body.imageUrl,
-    publishedAt: isPublished ? new Date() : null,
+  const createData: Record<string, unknown> = {
+    name: parsed.data.name,
+    slug: parsed.data.slug,
+    affiliateUrl: parsed.data.affiliateUrl,
+    currency: parsed.data.currency,
+    isPublished: Boolean(parsed.data.isPublished),
+    productUrl: parsed.data.productUrl,
+    description: parsed.data.description,
+    priceCents: parsed.data.priceCents,
+    merchant: parsed.data.merchant,
+    imageUrl: parsed.data.imageUrl,
+    publishedAt: parsed.data.isPublished ? new Date() : null,
   };
 
   if (currentUser.role === "WRITER") {
@@ -48,7 +65,7 @@ export async function POST(request: NextRequest) {
     createData.publishedAt = null;
   }
 
-  const product = await prisma.product.create({ data: createData });
+  const product = await prisma.product.create({ data: createData as any });
   await recordAuditLog(request, "create_product", "Product", product.id, { authorId: currentUser.id, role: currentUser.role }, currentUser.id);
 
   return NextResponse.json(product, { status: 201 });

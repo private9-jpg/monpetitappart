@@ -16,12 +16,12 @@ export type NewsletterCardProps = {
 
 export async function NewsletterCardGrid() {
   const newsletters = await listNewsletters();
-  const items = newsletters.length ? newsletters : NEWSLETTERS;
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((newsletter) => (
+      {newsletters.map((newsletter) => (
         <div key={String(newsletter.id)} className="rounded-2xl border border-surface-200 bg-white shadow-sm dark:border-surface-800 dark:bg-surface-900">
-          <p className="p-4 text-sm font-semibold text-surface-900 dark:text-surface-50">{newsletter.title}</p>
+          <p className="p-4 text-sm font-semibold text-surface-900 dark:text-surface-50">{newsletter.email}</p>
+          <p className="px-4 pb-4 text-xs text-zinc-500">{newsletter.isSubscribed ? "Actif" : "Inactif"}</p>
         </div>
       ))}
     </div>

@@ -1,12 +1,13 @@
 import { Metadata } from "next";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import ModerationClient from "@/components/admin/ModerationClient";
 
 export const metadata: Metadata = {
   title: "Modération",
   robots: { index: false, follow: false },
 };
 
-export default function AdminModerationPage() {
+export default async function AdminModerationPage() {
   return (
     <div className="flex min-h-screen">
       <AdminSidebar />
@@ -16,7 +17,7 @@ export default function AdminModerationPage() {
           <p className="mt-1 text-sm text-zinc-600">Commentaires en attente et signalements.</p>
         </div>
         <div className="p-4 sm:p-6">
-          <p className="text-sm text-zinc-600">Espace de modération — en construction.</p>
+          <ModerationClient />
         </div>
       </main>
     </div>

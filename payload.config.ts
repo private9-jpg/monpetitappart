@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 import { buildConfig } from "payload";
 import { postgresAdapter } from "@payloadcms/db-postgres";
+import { lexicalEditor } from "@payloadcms/richtext-lexical";
 
 const ArticleTypes = [
   { label: "GUIDE", value: "GUIDE" },
@@ -11,11 +12,12 @@ const ArticleTypes = [
   { label: "PILIER", value: "PILIER" },
 ];
 
-const StatusOptions = [
-  { label: "Brouillon", value: "DRAFT" },
-  { label: "Publié", value: "PUBLISHED" },
-  { label: "Archivé", value: "ARCHIVED" },
-  { label: "Inactif", value: "INACTIVE" },
+const EditorialStatusOptions = [
+  { label: "Brouillon", value: "draft" },
+  { label: "En relecture", value: "in_review" },
+  { label: "Validé", value: "approved" },
+  { label: "Publié", value: "published" },
+  { label: "Archivé", value: "archived" },
 ];
 
 const Users: CollectionConfig = {
@@ -25,11 +27,15 @@ const Users: CollectionConfig = {
     singular: "Utilisateur",
     plural: "Utilisateurs",
   },
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: "email",
       type: "email",
       required: true,
+      unique: true,
     },
     {
       name: "password",
@@ -68,6 +74,35 @@ const Users: CollectionConfig = {
   ],
 };
 
+const Media: CollectionConfig = {
+  slug: "media",
+  labels: {
+    singular: "Média",
+    plural: "Médias",
+  },
+  upload: {
+    staticDir: "media",
+    mimeTypes: ["image/*", "application/pdf"],
+    imageSizes: [
+      { name: "thumbnail", width: 300, height: 300, position: "centre" },
+      { name: "card", width: 800, height: 600, position: "centre" },
+      { name: "feature", width: 1600, height: 900, position: "centre" },
+    ],
+  },
+  fields: [
+    {
+      name: "alt",
+      type: "text",
+      label: "Texte alternatif",
+    },
+    {
+      name: "caption",
+      type: "textarea",
+      label: "Légende",
+    },
+  ],
+};
+
 const Merchants: CollectionConfig = {
   slug: "merchants",
   labels: {
@@ -75,6 +110,9 @@ const Merchants: CollectionConfig = {
     plural: "Marchands",
   },
   timestamps: true,
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: "name",
@@ -119,6 +157,9 @@ const AffiliateLinks: CollectionConfig = {
     plural: "Liens affiliés",
   },
   timestamps: true,
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: "slug",
@@ -184,6 +225,9 @@ const ProductOffers: CollectionConfig = {
     plural: "Offres produits",
   },
   timestamps: true,
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: "product",
@@ -242,6 +286,13 @@ const Products: CollectionConfig = {
     plural: "Produits",
   },
   timestamps: true,
+  versions: {
+    drafts: true,
+    maxPerDoc: 20,
+  },
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: "name",
@@ -312,8 +363,40 @@ const Products: CollectionConfig = {
     {
       name: "status",
       type: "select",
-      options: StatusOptions,
-      defaultValue: "DRAFT",
+      options: EditorialStatusOptions,
+      defaultValue: "draft",
+    },
+    {
+      name: "seoTitle",
+      label: "SEO title",
+      type: "text",
+    },
+    {
+      name: "metaDescription",
+      label: "Meta description",
+      type: "textarea",
+    },
+    {
+      name: "ogImage",
+      label: "Image OG",
+      type: "relationship",
+      relationTo: "media",
+    },
+    {
+      name: "canonical",
+      label: "Canonical",
+      type: "text",
+    },
+    {
+      name: "indexable",
+      label: "Indexable",
+      type: "checkbox",
+      defaultValue: true,
+    },
+    {
+      name: "publishedAt",
+      label: "Date de publication",
+      type: "date",
     },
     {
       name: "mainOffer",
@@ -338,6 +421,13 @@ const Articles: CollectionConfig = {
     plural: "Articles",
   },
   timestamps: true,
+  versions: {
+    drafts: true,
+    maxPerDoc: 20,
+  },
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: "title",
@@ -372,14 +462,20 @@ const Articles: CollectionConfig = {
     {
       name: "status",
       type: "select",
-      options: StatusOptions,
-      defaultValue: "DRAFT",
+      options: EditorialStatusOptions,
+      defaultValue: "draft",
     },
     {
       name: "author",
       type: "relationship",
       relationTo: "users",
       required: true,
+    },
+    {
+      name: "featuredImage",
+      label: "Image à la une",
+      type: "relationship",
+      relationTo: "media",
     },
     {
       name: "cluster",
@@ -398,7 +494,8 @@ const Articles: CollectionConfig = {
     {
       name: "ogImage",
       label: "Image OG",
-      type: "text",
+      type: "relationship",
+      relationTo: "media",
     },
     {
       name: "canonical",
@@ -431,6 +528,13 @@ const Comments: CollectionConfig = {
     plural: "Commentaires",
   },
   timestamps: true,
+  versions: {
+    drafts: true,
+    maxPerDoc: 10,
+  },
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: "article",
@@ -517,13 +621,28 @@ const Comments: CollectionConfig = {
 export default buildConfig({
   serverURL: process.env.PAYLOAD_PUBLIC_SERVER_URL || "http://localhost:3000",
   secret: process.env.PAYLOAD_SECRET || "change-me",
+  editor: lexicalEditor(),
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL,
     },
   }),
+  admin: {
+    livePreview: {
+      url: ({ data }) => {
+        if (data && typeof data === "object" && "slug" in data) {
+          return `http://localhost:3000/guides/${(data as { slug?: string }).slug}`;
+        }
+        return "http://localhost:3000";
+      },
+    },
+    meta: {
+      titleSuffix: " | Mon Petit Appart",
+    },
+  },
   collections: [
     Users,
+    Media,
     Articles,
     Products,
     Merchants,

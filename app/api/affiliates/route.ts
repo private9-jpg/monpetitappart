@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { trackClick } from "@/lib/services/affiliate.service";
 
 export async function GET(request: NextRequest) {
   const productSlug = request.nextUrl.searchParams.get("product");
@@ -18,11 +19,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Affiliate link not found" }, { status: 404 });
   }
 
-  await prisma.affiliateLink.update({
-    where: { id: link.id },
-    data: { clickCount: { increment: 1 } },
-  });
-
-  const target = link.url;
-  return NextResponse.redirect(target);
+  await trackClick(link.id);
+  return NextResponse.redirect(link.url);
 }

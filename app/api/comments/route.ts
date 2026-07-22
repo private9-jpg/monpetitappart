@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { commentCreateSchema } from "@/lib/validation";
 import { getUserFromRequest, forbidden, unauthorized, recordAuditLog } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { parseAndSanitize } from "@/lib/parse";
+import { isRedisAvailable, checkRedisRateLimit } from "@/lib/redis";
+import { notifyCommentPublished } from "@/lib/services/notification.service";
 
 function hashIp(ip?: string | null) {
   if (!ip) return null;
@@ -45,39 +48,87 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? undefined;
-    const rateLimitKey = `comments:${ip}`;
-    const rate = checkRateLimit({ key: rateLimitKey, limit: 10, windowMs: 60_000 });
-    if (!rate.success) {
+    const redisAvailable = await isRedisAvailable();
+    const rateLimit = redisAvailable
+      ? await checkRedisRateLimit(`comments:${ip}`, 10, 60_000)
+      : checkRateLimit({ key: `comments:${ip}`, limit: 10, windowMs: 60_000 });
+
+    if (!rateLimit.success) {
       return NextResponse.json({ error: "Trop de commentaires. Veuillez réessayer dans un instant." }, { status: 429 });
     }
 
-    const body = await request.json();
-    const parsed = commentCreateSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    const parseResult = await parseAndSanitize(request, commentCreateSchema);
+    if (!parseResult.success) {
+      return parseResult.response;
+    }
+    const parsed = parseResult.data;
+
+    if (parsed.honeypot && parsed.honeypot.trim() !== "") {
+      await recordAuditLog(request, "comment_spam_honeypot", "Comment", undefined, { ip }, undefined);
+      return NextResponse.json({ message: "Commentaire enregistré" }, { status: 200 });
+    }
+
+    const turnstileToken = parsed.turnstileToken;
+    if (turnstileToken) {
+      const turnstileValid = await verifyTurnstile(turnstileToken, ip);
+      if (!turnstileValid) {
+        return NextResponse.json({ error: "Vérification anti-bot échouée" }, { status: 400 });
+      }
     }
 
     const author = await getUserFromRequest(request);
-    const spamScore = author ? 0 : 10;
+    let spamScore = author ? 0 : 10;
+
+    if (parsed.honeypot && parsed.honeypot.trim() !== "") {
+      spamScore = 100;
+    }
 
     const comment = await prisma.comment.create({
       data: {
-        content: parsed.data.content,
-        targetType: parsed.data.targetType,
-        targetId: parsed.data.targetId,
-        parentCommentId: parsed.data.parentCommentId,
+        content: parsed.content,
+        targetType: parsed.targetType,
+        targetId: parsed.targetId,
+        parentCommentId: parsed.parentCommentId,
         authorId: author?.id ?? null,
         spamScore,
         ipHash: hashIp(ip),
         userAgent: request.headers.get("user-agent") ?? undefined,
-        optInResponse: parsed.data.rating !== undefined ? true : false,
+        optInResponse: parsed.rating !== undefined ? true : false,
+        isPublished: spamScore < 50,
       },
       include: { author: { select: { id: true, email: true } } },
     });
 
-    await recordAuditLog(request, "create_comment", "Comment", comment.id, { targetType: comment.targetType, targetId: comment.targetId }, author?.id);
+    await recordAuditLog(request, "create_comment", "Comment", comment.id, { targetType: comment.targetType, targetId: comment.targetId, spamScore }, author?.id);
+
+    if (comment.isPublished) {
+      await notifyCommentPublished(comment.id, comment.targetType, comment.targetId);
+    }
+
     return NextResponse.json(comment, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
+
+async function verifyTurnstile(token: string, ip?: string): Promise<boolean> {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true;
+
+  try {
+    const formData = new FormData();
+    formData.append("secret", secret);
+    formData.append("response", token);
+    if (ip) formData.append("remoteip", ip);
+
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+    return result.success === true;
+  } catch {
+    return false;
   }
 }

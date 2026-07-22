@@ -73,6 +73,29 @@ export async function requireUser(request: NextRequest, roles: UserRole[] = []) 
   return user;
 }
 
+export async function getCurrentUser() {
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token")?.value;
+  if (!token) return null;
+
+  const session = await prisma.session.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+
+  if (!session || session.expiresAt < new Date()) {
+    return null;
+  }
+
+  const user = session.user;
+  if (!user || !user.isActive) {
+    return null;
+  }
+
+  return user;
+}
+
 export async function recordAuditLog(
   request: NextRequest,
   action: string,

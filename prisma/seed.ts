@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -24,9 +25,12 @@ async function main() {
   await prisma.session.deleteMany();
   await prisma.user.deleteMany();
 
+  const adminPassword = await hash("admin123", 10);
+  const editorPassword = await hash("editor123", 10);
+
   const userData: Array<{ email: string; passwordHash: string; role: UserRole }> = [
-    { email: "admin@monpetitappart.fr", passwordHash: "admin-hash", role: "ADMIN" },
-    { email: "editor@monpetitappart.fr", passwordHash: "editor-hash", role: "EDITOR" },
+    { email: "admin@monpetitappart.fr", passwordHash: adminPassword, role: "ADMIN" },
+    { email: "editor@monpetitappart.fr", passwordHash: editorPassword, role: "EDITOR" },
   ];
 
   await prisma.user.createMany({ data: userData,  });

@@ -219,6 +219,7 @@ model Article {
   authorId     String
   featuredAt   DateTime?
   publishedAt  DateTime?
+  lastCheckedAt DateTime?
   isFeatured   Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
